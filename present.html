@@ -56,7 +56,10 @@
   .summary .avg{font:700 2.4rem/1 var(--mono)}
   .tag{font:700 .8rem/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; padding:7px 11px; border-radius:999px; border:1.5px solid var(--ink)}
   .ends{display:flex; justify-content:space-between; color:var(--muted); font-size:.9rem; font-weight:700}
-
+  .b{cursor:pointer}
+  .b .who{grid-column:1 / -1; font-size:.95rem; color:var(--muted); padding:2px 0 6px calc(8rem + 12px)}
+  .end-label{font-weight:700; color:var(--muted); padding-left:calc(8rem + 12px); margin:6px 0}
+  .summary{margin-top:16px}
   @media (max-width:900px){ .lobby,.poll{grid-template-columns:minmax(0,1fr)} .app{padding:0 16px} }
   @media (prefers-reduced-motion:reduce){ .fi,.prog b{transition:none} }
 </style>
@@ -211,16 +214,18 @@ function start(){
         const tag = (low >= .3 && high >= .3) ? "Split verdict" : avg <= 2.2 ? "Leans good nudge" : avg >= 3.8 ? "Leans dark pattern" : "Grey area";
         summary = `<span class="avg">${avg.toFixed(1)}</span><span class="muted">average of ${n}</span><span class="tag">${tag}</span>`;
       }
-      el.innerHTML = `<div class="bars scale-b">${c.map((k,i) => `<div class="b" title="${esc(who[i].join(", ") || "No one")}"><span class="lab">${i+1}</span><div class="tr"><div class="fi" style="width:${k/max*100}%"></div></div><span class="ct">${k}</span></div>`).join("")}</div>
-        <div class="ends" style="margin:10px 0 16px; padding-left:8rem"><span>${esc(labels.left)}</span><span>${esc(labels.right)}</span></div>
+        el.innerHTML = `<div class="end-label">${esc(labels.left)}</div>
+        <div class="bars scale-b">${c.map((k,i) => `<div class="b"><span class="lab">${i+1}</span><div class="tr"><div class="fi" style="width:${k/max*100}%"></div></div><span class="ct">${k}</span><div class="who" hidden>${esc(who[i].join(", ") || "No one")}</div></div>`).join("")}</div>
+        <div class="end-label">${esc(labels.right)}</div>
         <div class="summary">${summary}</div>`;
     } else {
       const opts = p.options || [];
       const who = opts.map(() => []);
       Object.entries(resp).forEach(([id, r]) => { if (who[r.v]) who[r.v].push((people[id] && people[id].name) || "Unknown"); });
       const c = who.map(w => w.length);      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
-      el.innerHTML = `<div class="bars">${opts.map((o,i) => `<div class="b" title="${esc(who[i].join(", ") || "No one")}"><span class="lab">${esc(o)}</span><div class="tr"><div class="fi" style="width:${c[i]/max*100}%"></div></div><span class="ct">${c[i]}</span></div>`).join("")}</div>
-        <p class="muted" style="margin:14px 0 0">${n} ${n === 1 ? "answer" : "answers"}</p>`;
+      el.innerHTML = `<div class="bars">${opts.map((o,i) => `<div class="b"><span class="lab">${esc(o)}</span><div class="tr"><div class="fi" style="width:${c[i]/max*100}%"></div></div><span class="ct">${c[i]}</span><div class="who" hidden>${esc(who[i].join(", ") || "No one")}</div></div>`).join("")}</div>
+      <p class="muted" style="margin:14px 0 0">${n} ${n === 1 ? "answer" : "answers"}</p>`;
+        el.onclick = e => { const b = e.target.closest(".b"); if (b) { const w = b.querySelector(".who"); w.hidden = !w.hidden; } };
     }
   }
 
