@@ -160,7 +160,6 @@ function start(){
           <div class="clock" id="clock">0:45</div>
           <div class="row"><button class="btn ghost small" id="plus" type="button">+15s</button><button class="btn" id="finish" type="button">Finish</button></div>
           <div><div class="resp"><span>Responded</span><span class="mono" id="rc">0 / 0</span></div><div class="prog" style="margin-top:8px"><b id="rb"></b></div></div>
-          <div class="names small" id="nameList"></div>
         </aside></div>`;
       $("plus").addEventListener("click", () => {
         const base = Math.max(now(), live.endsAt);
@@ -194,7 +193,6 @@ function start(){
       const done = list.filter(x => resp[x.id]).length;
       $("rc").textContent = done + " / " + list.length;
       $("rb").style.width = (list.length ? done / list.length * 100 : 0) + "%";
-      $("nameList").innerHTML = list.map(x => `<span class="chip ${resp[x.id] ? "yes" : ""}">${esc(x.name)}</span>`).join("");
     }
     if (mode === "results") drawResults(polls[live.poll]);
   }
@@ -203,8 +201,9 @@ function start(){
     const el = $("results"); if (!el) return;
     const vals = Object.values(resp).map(r => r.v);
     if (p.type === "scale") {
-      const c = [0,0,0,0,0]; vals.forEach(v => { if (v >= 1 && v <= 5) c[v-1]++; });
-      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
+      const who = [[],[],[],[],[]];
+      Object.entries(resp).forEach(([id, r]) => { if (r.v >= 1 && r.v <= 5) who[r.v-1].push((people[id] && people[id].name) || "Unknown"); });
+      const c = who.map(w => w.length);      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
       let summary = `<span class="muted">No answers.</span>`;
       if (n) {
         const avg = c.reduce((a,b,i) => a + b*(i+1), 0) / n;
@@ -212,14 +211,15 @@ function start(){
         const tag = (low >= .3 && high >= .3) ? "Split verdict" : avg <= 2.2 ? "Leans good nudge" : avg >= 3.8 ? "Leans dark pattern" : "Grey area";
         summary = `<span class="avg">${avg.toFixed(1)}</span><span class="muted">average of ${n}</span><span class="tag">${tag}</span>`;
       }
-      el.innerHTML = `<div class="bars scale-b">${c.map((k,i) => `<div class="b"><span class="lab">${i+1}</span><div class="tr"><div class="fi" style="width:${k/max*100}%"></div></div><span class="ct">${k}</span></div>`).join("")}</div>
+      el.innerHTML = `<div class="bars scale-b">${c.map((k,i) => `<div class="b" title="${esc(who[i].join(", ") || "No one")}"><span class="lab">${i+1}</span><div class="tr"><div class="fi" style="width:${k/max*100}%"></div></div><span class="ct">${k}</span></div>`).join("")}</div>
         <div class="ends" style="margin:10px 0 16px; padding-left:8rem"><span>${esc(labels.left)}</span><span>${esc(labels.right)}</span></div>
         <div class="summary">${summary}</div>`;
     } else {
       const opts = p.options || [];
-      const c = opts.map(() => 0); vals.forEach(v => { if (c[v] !== undefined) c[v]++; });
-      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
-      el.innerHTML = `<div class="bars">${opts.map((o,i) => `<div class="b"><span class="lab">${esc(o)}</span><div class="tr"><div class="fi" style="width:${c[i]/max*100}%"></div></div><span class="ct">${c[i]}</span></div>`).join("")}</div>
+      const who = opts.map(() => []);
+      Object.entries(resp).forEach(([id, r]) => { if (who[r.v]) who[r.v].push((people[id] && people[id].name) || "Unknown"); });
+      const c = who.map(w => w.length);      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
+      el.innerHTML = `<div class="bars">${opts.map((o,i) => `<div class="b" title="${esc(who[i].join(", ") || "No one")}"><span class="lab">${esc(o)}</span><div class="tr"><div class="fi" style="width:${c[i]/max*100}%"></div></div><span class="ct">${c[i]}</span></div>`).join("")}</div>
         <p class="muted" style="margin:14px 0 0">${n} ${n === 1 ? "answer" : "answers"}</p>`;
     }
   }
