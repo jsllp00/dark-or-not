@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dark or Not? · Join</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body{padding:max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left))}
+  .wrap{max-width:520px; margin:0 auto; min-height:100%; display:flex; flex-direction:column; gap:20px}
+  .brand{font-weight:700; letter-spacing:.02em; color:var(--muted); font-size:.85rem; text-transform:uppercase}
+  .center{flex:1; display:flex; flex-direction:column; justify-content:center; gap:16px; text-align:center}
+  .big{font-size:1.6rem; font-weight:700}
+  .pulse{width:14px; height:14px; border-radius:50%; background:var(--accent); margin:0 auto; animation:p 1.6s ease-in-out infinite}
+  @keyframes p{0%,100%{opacity:.25; transform:scale(.8)}50%{opacity:1; transform:scale(1)}}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+  .timer{display:flex; align-items:center; justify-content:space-between; font-weight:700}
+  .timer .mono{font-size:1.4rem}
+  .tbar{height:6px; background:var(--line); border-radius:3px; overflow:hidden}
+  .tbar b{display:block; height:100%; background:var(--accent); width:100%; transition:width .25s linear}
+  .img{width:100%; border-radius:14px; border:1px solid var(--line); background:var(--surface)}
+  .q{font-size:1.15rem; font-weight:700; margin:0}
+  .slider-box{padding:22px 18px 18px; display:flex; flex-direction:column; gap:14px}
+  .val{text-align:center; font-family:var(--mono); font-size:3rem; font-weight:700; line-height:1; color:var(--accent)}
+  .val.idle{color:var(--line)}
+  input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:44px; background:transparent; margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:8px; border-radius:4px; background:var(--line)}
+  input[type=range]::-moz-range-track{height:8px; border-radius:4px; background:var(--line)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:34px; height:34px; border-radius:50%; background:var(--accent); margin-top:-13px; border:4px solid var(--surface); box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  input[type=range]::-moz-range-thumb{width:28px; height:28px; border-radius:50%; background:var(--accent); border:4px solid var(--surface)}
+  .ticks{display:grid; grid-template-columns:repeat(5,1fr); text-align:center; font-family:var(--mono); color:var(--muted); font-size:.9rem; margin-top:-6px}
+  .ends{display:flex; justify-content:space-between; font-size:.9rem; font-weight:700}
+  .choices{display:flex; flex-direction:column; gap:10px}
+  .choice{text-align:left; padding:16px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; cursor:pointer}
+  .choice[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+  .check{width:64px; height:64px; border-radius:50%; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; margin:0 auto; font-size:2rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Dark or Not?</div>
+
+  <section id="vJoin" class="center" hidden>
+    <h1 class="big">Join the poll</h1>
+    <form id="joinForm" style="display:flex; flex-direction:column; gap:12px">
+      <label for="name" class="muted">Your name</label>
+      <input id="name" class="field" maxlength="40" autocomplete="name" required placeholder="First and last name">
+      <button class="btn" type="submit">Join</button>
+    </form>
+  </section>
+
+  <section id="vWait" class="center" hidden>
+    <div class="pulse" aria-hidden="true"></div>
+    <p class="big" id="waitTitle">You're in.</p>
+    <p class="muted" id="waitSub">Waiting for the next poll…</p>
+  </section>
+
+  <section id="vVote" hidden style="display:flex; flex-direction:column; gap:16px">
+    <div>
+      <div class="timer"><span id="pollNo">Poll</span><span class="mono" id="tLeft">0:45</span></div>
+      <div class="tbar"><b id="tBar"></b></div>
+    </div>
+    <img id="pImg" class="img" alt="" hidden>
+    <p class="q" id="pQ"></p>
+    <div id="scaleBox" class="card slider-box" hidden>
+      <div class="val idle" id="sVal" aria-live="polite">–</div>
+      <input id="slider" type="range" min="1" max="5" step="1" value="3" aria-label="Your rating from 1 to 5">
+      <div class="ticks" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+      <div class="ends"><span id="lblL"></span><span id="lblR"></span></div>
+      <p class="muted" id="sHint" style="margin:0; text-align:center; font-size:.9rem">Drag the slider to choose.</p>
+    </div>
+    <div id="choiceBox" class="choices" hidden></div>
+    <button class="btn" id="submit" type="button" disabled>Submit</button>
+    <p class="muted" style="margin:0; text-align:center; font-size:.85rem">You can't change your answer after you submit.</p>
+  </section>
+
+  <section id="vDone" class="center" hidden>
+    <div class="check" aria-hidden="true">✓</div>
+    <p class="big">Answer received</p>
+    <p class="muted">Results will appear on the main screen.</p>
+  </section>
+
+  <section id="vUp" class="center" hidden>
+    <p class="big">Time's up</p>
+    <p class="muted">This poll has closed. Wait for the next one.</p>
+  </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="common.js"></script>
+<script>
+(function(){
+  if (!CONFIGURED) { showNotConfigured(); return; }
+  const $ = id => document.getElementById(id);
+  const views = ["vJoin","vWait","vVote","vDone","vUp"];
+  function show(v){ views.forEach(x => $(x).hidden = x !== v); }
+
+  let pid = null, name = "";
+  try { pid = localStorage.getItem("dn-pid"); name = localStorage.getItem("dn-name") || ""; } catch(e){}
+  if (!pid) { pid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^a-zA-Z0-9-]/g,""); try{ localStorage.setItem("dn-pid", pid); }catch(e){} }
+
+  let joined = false, live = null, polls = normalizePolls(null), labels = DEFAULT_LABELS;
+  let answered = false, answerRef = null, renderedRound = null, choice = null, touched = false, sending = false;
+
+  db.ref("polls").on("value", s => { polls = normalizePolls(s.val()); if (live) renderedRound = null; update(); });
+  db.ref("config/labels").on("value", s => { labels = Object.assign({}, DEFAULT_LABELS, s.val() || {}); update(); });
+
+  // Rejoin automatically if this phone already joined this session.
+  db.ref("participants/" + pid).on("value", s => {
+    joined = s.exists();
+    if (joined) name = s.val().name;
+    update();
+  });
+
+  db.ref("live").on("value", s => {
+    live = s.val();
+    if (answerRef) { answerRef.off(); answerRef = null; }
+    answered = false;
+    if (live && live.round) {
+      answerRef = db.ref("responses/" + live.round + "/" + pid);
+      answerRef.on("value", a => { answered = a.exists(); update(); });
+    }
+    update();
+  });
+
+  $("name").value = name;
+  $("joinForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const n = $("name").value.trim().replace(/\s+/g," ").slice(0,40);
+    if (!n) return;
+    name = n;
+    try { localStorage.setItem("dn-name", n); } catch(e){}
+    await db.ref("participants/" + pid).set({ name: n, joinedAt: firebase.database.ServerValue.TIMESTAMP });
+  });
+
+  function update(){
+    if (!joined) { show("vJoin"); return; }
+    $("waitTitle").textContent = "You're in, " + name + ".";
+    if (!live || live.state !== "voting") { show("vWait"); return; }
+    if (answered) { show("vDone"); return; }
+    if (now() >= live.endsAt) { show("vUp"); return; }
+    if (renderedRound !== live.round) renderPoll();
+    show("vVote");
+  }
+
+  function renderPoll(){
+    renderedRound = live.round;
+    const p = polls[live.poll] || polls[0];
+    $("pollNo").textContent = "Poll " + (live.poll + 1) + " of " + POLL_COUNT;
+    $("pQ").textContent = p.q;
+    if (p.img) { $("pImg").src = p.img; $("pImg").alt = "Image for poll " + (live.poll + 1); $("pImg").hidden = false; }
+    else { $("pImg").hidden = true; $("pImg").removeAttribute("src"); }
+    touched = false; choice = null; sending = false;
+    $("submit").disabled = true;
+    $("submit").textContent = "Submit";
+    if (p.type === "scale") {
+      $("scaleBox").hidden = false; $("choiceBox").hidden = true;
+      $("slider").value = 3; $("sVal").textContent = "–"; $("sVal").classList.add("idle");
+      $("sHint").hidden = false;
+      $("lblL").textContent = "1 · " + labels.left; $("lblR").textContent = labels.right + " · 5";
+    } else {
+      $("scaleBox").hidden = true; $("choiceBox").hidden = false;
+      $("choiceBox").innerHTML = (p.options || []).map((o,i) => `<button type="button" class="choice" aria-pressed="false" data-i="${i}">${esc(o)}</button>`).join("");
+    }
+  }
+
+  $("slider").addEventListener("input", () => {
+    touched = true;
+    $("sVal").textContent = $("slider").value; $("sVal").classList.remove("idle");
+    $("sHint").hidden = true;
+    $("submit").disabled = false;
+  });
+  $("choiceBox").addEventListener("click", e => {
+    const b = e.target.closest(".choice"); if (!b) return;
+    choice = +b.dataset.i;
+    $("choiceBox").querySelectorAll(".choice").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    $("submit").disabled = false;
+  });
+
+  $("submit").addEventListener("click", async () => {
+    if (sending || !live) return;
+    const p = polls[live.poll];
+    const v = p.type === "scale" ? (touched ? +$("slider").value : null) : choice;
+    if (v === null) return;
+    sending = true; $("submit").disabled = true; $("submit").textContent = "Sending…";
+    try {
+      await db.ref("responses/" + live.round + "/" + pid).set({ v, at: firebase.database.ServerValue.TIMESTAMP });
+    } catch (err) {
+      // Rejected: time ran out or the poll was closed.
+      show("vUp");
+    }
+  });
+
+  // Countdown
+  setInterval(() => {
+    if (!live || live.state !== "voting" || !joined || answered) return;
+    const p = polls[live.poll] || {};
+    const left = Math.max(0, live.endsAt - now());
+    const total = Math.max(1, live.endsAt - (live.startedAt || live.endsAt - (p.time || DEFAULT_TIME) * 1000));
+    const sec = Math.ceil(left / 1000);
+    $("tLeft").textContent = Math.floor(sec/60) + ":" + String(sec % 60).padStart(2,"0");
+    $("tBar").style.width = Math.min(100, left / total * 100) + "%";
+    if (left <= 0) update();
+  }, 250);
+})();
+</script>
+</body>
+</html>

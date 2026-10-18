@@ -1,0 +1,22 @@
+{
+  "rules": {
+    ".read": true,
+    "config": { ".write": true },
+    "polls": { ".write": true },
+    "live": { ".write": true },
+    "participants": {
+      ".write": true,
+      "$pid": {
+        ".validate": "newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 40"
+      }
+    },
+    "responses": {
+      "$round": {
+        "$pid": {
+          ".write": "!data.exists() && newData.exists() && root.child('live/round').val() === $round && root.child('live/state').val() === 'voting' && now < root.child('live/endsAt').val() + 1500",
+          ".validate": "newData.hasChildren(['v'])"
+        }
+      }
+    }
+  }
+}

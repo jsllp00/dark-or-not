@@ -1,0 +1,31 @@
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --ink:#141824; --muted:#5D6473; --line:#E2E5EB;
+  --accent:#2747D8; --accent-soft:#E8ECFC; --accent-ink:#FFFFFF; --good:#1B8A4B; --warn:#B4231A;
+  --font:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0; height:100%}
+body{background:var(--bg); color:var(--ink); font:400 16px/1.5 var(--font); -webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+[hidden]{display:none!important}
+h1,h2,h3{margin:0; line-height:1.15; text-wrap:balance}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono); font-variant-numeric:tabular-nums}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; border-radius:12px;
+  padding:14px 22px; font-weight:700; font-size:1rem; cursor:pointer; background:var(--accent); color:var(--accent-ink)}
+.btn:disabled{opacity:.35; cursor:not-allowed}
+.btn.ghost{background:var(--surface); color:var(--ink); border:1px solid var(--line)}
+.btn.small{padding:9px 14px; font-size:.9rem; border-radius:10px}
+.btn.danger{color:var(--warn)}
+.field{width:100%; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); font-size:1.05rem}
+.field:focus{border-color:var(--accent); outline:none; box-shadow:0 0 0 3px var(--accent-soft)}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:16px}
+
+/* PIN gate */
+.gate{position:fixed; inset:0; background:var(--bg); display:grid; place-items:center; padding:24px; z-index:50}
+.gate form{width:min(360px,100%); display:flex; flex-direction:column; gap:14px}
+.gate .err{color:var(--warn); min-height:1.5em; font-size:.9rem}
+.notice{padding:14px 16px; border-radius:12px; background:var(--accent-soft); font-size:.95rem}
