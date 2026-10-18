@@ -36,6 +36,7 @@
   .choices{display:flex; flex-direction:column; gap:10px}
   .choice{text-align:left; padding:16px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; cursor:pointer}
   .choice[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+  .choice .ask{display:block; font-weight:400; font-size:.88rem; color:var(--muted); margin-top:2px}
   .check{width:64px; height:64px; border-radius:50%; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; margin:0 auto; font-size:2rem}
 </style>
 </head>
@@ -72,6 +73,10 @@
       <div class="ends"><span id="lblL"></span><span id="lblR"></span></div>
       <p class="muted" id="sHint" style="margin:0; text-align:center; font-size:.9rem">Drag the slider to choose.</p>
     </div>
+    <div id="lensBox" hidden style="display:flex; flex-direction:column; gap:10px">
+      <p class="q" style="font-size:1rem">Which lens drove your score?</p>
+      <div id="lensList" class="choices"></div>
+    </div>
     <div id="choiceBox" class="choices" hidden></div>
     <button class="btn" id="submit" type="button" disabled>Submit</button>
     <p class="muted" style="margin:0; text-align:center; font-size:.85rem">You can't change your answer after you submit.</p>
@@ -105,7 +110,7 @@
   if (!pid) { pid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^a-zA-Z0-9-]/g,""); try{ localStorage.setItem("dn-pid", pid); }catch(e){} }
 
   let joined = false, live = null, polls = normalizePolls(null), labels = DEFAULT_LABELS;
-  let answered = false, answerRef = null, renderedRound = null, choice = null, touched = false, sending = false;
+  let answered = false, answerRef = null, renderedRound = null, choice = null, lens = null, touched = false, sending = false;
 
   db.ref("polls").on("value", s => { polls = normalizePolls(s.val()); if (live) renderedRound = null; update(); });
   db.ref("config/labels").on("value", s => { labels = Object.assign({}, DEFAULT_LABELS, s.val() || {}); update(); });
@@ -155,16 +160,17 @@
     $("pQ").textContent = p.q;
     if (p.img) { $("pImg").src = p.img; $("pImg").alt = "Image for poll " + (live.poll + 1); $("pImg").hidden = false; }
     else { $("pImg").hidden = true; $("pImg").removeAttribute("src"); }
-    touched = false; choice = null; sending = false;
+    touched = false; choice = null; lens = null; sending = false;
     $("submit").disabled = true;
     $("submit").textContent = "Submit";
     if (p.type === "scale") {
-      $("scaleBox").hidden = false; $("choiceBox").hidden = true;
+      $("scaleBox").hidden = false; $("choiceBox").hidden = true; $("lensBox").hidden = false;
+      $("lensList").innerHTML = LENSES.map((l,i) => `<button type="button" class="choice" aria-pressed="false" data-l="${i}">${esc(l.name)}<span class="ask">${esc(l.ask)}</span></button>`).join("");
       $("slider").value = 3; $("sVal").textContent = "–"; $("sVal").classList.add("idle");
       $("sHint").hidden = false;
       $("lblL").textContent = "1 · " + labels.left; $("lblR").textContent = labels.right + " · 5";
     } else {
-      $("scaleBox").hidden = true; $("choiceBox").hidden = false;
+      $("scaleBox").hidden = true; $("choiceBox").hidden = false; $("lensBox").hidden = true;
       $("choiceBox").innerHTML = (p.options || []).map((o,i) => `<button type="button" class="choice" aria-pressed="false" data-i="${i}">${esc(o)}</button>`).join("");
     }
   }
@@ -173,8 +179,19 @@
     touched = true;
     $("sVal").textContent = $("slider").value; $("sVal").classList.remove("idle");
     $("sHint").hidden = true;
-    $("submit").disabled = false;
+    readyCheck();
   });
+  $("lensList").addEventListener("click", e => {
+    const b = e.target.closest(".choice"); if (!b) return;
+    lens = +b.dataset.l;
+    $("lensList").querySelectorAll(".choice").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    readyCheck();
+  });
+  // A scale answer needs both a slider value and a lens.
+  function readyCheck(){
+    $("submit").disabled = !(touched && lens !== null);
+    $("submit").textContent = touched && lens === null ? "Pick a lens to submit" : !touched && lens !== null ? "Move the slider to submit" : "Submit";
+  }
   $("choiceBox").addEventListener("click", e => {
     const b = e.target.closest(".choice"); if (!b) return;
     choice = +b.dataset.i;
@@ -186,10 +203,12 @@
     if (sending || !live) return;
     const p = polls[live.poll];
     const v = p.type === "scale" ? (touched ? +$("slider").value : null) : choice;
-    if (v === null) return;
+    if (v === null || (p.type === "scale" && lens === null)) return;
     sending = true; $("submit").disabled = true; $("submit").textContent = "Sending…";
     try {
-      await db.ref("responses/" + live.round + "/" + pid).set({ v, at: firebase.database.ServerValue.TIMESTAMP });
+      const body = { v, at: firebase.database.ServerValue.TIMESTAMP };
+      if (p.type === "scale") body.lens = lens;
+      await db.ref("responses/" + live.round + "/" + pid).set(body);
     } catch (err) {
       // Rejected: time ran out or the poll was closed.
       show("vUp");

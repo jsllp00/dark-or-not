@@ -6,7 +6,7 @@ Three pages:
 |---|---|---|
 | `index.html` | Students (via the QR code) | Join with a name, vote on each poll |
 | `present.html` | You, on the projector | Lobby with QR and names, start polls, timer, who answered, results |
-| `edit.html` | You, before class | Write each question, upload images, set timers, edit poll 7's options |
+| `edit.html` | You, before class | Write each question, upload images, set timers, edit the final poll's options |
 
 Setup takes about 15 minutes, once.
 
@@ -33,7 +33,17 @@ Setup takes about 15 minutes, once.
 4. Firebase shows a block of code containing `const firebaseConfig = { ... }`. Copy the lines **inside** the curly braces.
 5. Open `firebase-config.js` in this folder and replace the `PASTE_HERE` lines with what you copied. Make sure `databaseURL` is there; if it is missing, copy it from the top of the Realtime Database page (it looks like `https://your-project-default-rtdb.firebaseio.com`).
 
+> **Keep the config off GitHub:** don't upload `firebase-config.js`. Instead, follow the box in Step 4. The site creates the file itself each time it publishes.
+
 ## Step 4 — Put the files on GitHub Pages
+
+> **Keep the config off GitHub (recommended):**
+> 1. Upload every file **except** `firebase-config.js`, including the `.github` folder. (On a Mac, press Cmd+Shift+. in Finder to see hidden folders.)
+> 2. In the repository, open **Settings → Secrets and variables → Actions → New repository secret**. Name it `FIREBASE_CONFIG` and paste the whole contents of your filled-in config (from `const FIREBASE_CONFIG = {` to the closing `};`). Click **Add secret**.
+> 3. Open **Settings → Pages** and set **Source** to **GitHub Actions** (instead of "Deploy from a branch" in item 3 below).
+> 4. Open the **Actions** tab. Run **Deploy to GitHub Pages** (or push any change). After a green check, the site is live.
+>
+> If a config file was already uploaded earlier, delete it from the repo. It still exists in the repo's history, so the simplest clean fix is to create a new repository and upload the files there.
 
 1. Go to **https://github.com/new**. Name the repository e.g. `dark-or-not`, set it to **Public**, and click **Create repository**.
 2. Click **uploading an existing file**. Drag in **all the files from this folder**, then click **Commit changes**.
@@ -48,8 +58,8 @@ Your pages:
 ## Step 5 — Fill in your polls
 
 1. Open the **editor** page. The first time, it asks you to **create a PIN**. You'll use the same PIN on the presenter page.
-2. Each poll is pre-filled with the case text; edit the question, **upload an image**, and adjust the timer (default 45 seconds).
-3. Poll 7 is multiple choice, pre-filled with the closing question.
+2. Each poll is pre-filled with the case text; edit the question, **upload an image**, and adjust the timer (default 35 seconds).
+3. Poll 4 is multiple choice: which lens regulators should use.
 4. Click **Save all changes**.
 
 ## Step 6 — Test before class (5 minutes)
@@ -57,6 +67,17 @@ Your pages:
 1. Open the **presenter** page on your laptop and scan the QR code with your phone.
 2. Join with a name, then start Poll 1 from the laptop. Vote on your phone and watch your name get a ✓.
 3. Click **Finish** to see the results, then **Back to lobby** → **Reset session** to clear the test.
+
+### Testing with 30 students
+
+Open `https://YOUR-USERNAME.github.io/dark-or-not/test.html` in a second tab (same PIN).
+
+1. Click **Add test students**. Thirty names appear in the presenter lobby.
+2. Start a poll on the presenter tab. The test students answer at random times before the timer ends; about 10% let the timer run out, so you can see the ✓ / ○ list and the count work.
+3. Join with your own phone too, to check the real student screens alongside them.
+4. Afterwards click **Remove test students**, then **Reset session** on the presenter.
+
+Firebase's free plan allows 100 devices connected at once, so 30 phones plus your laptop are well within it.
 
 ---
 

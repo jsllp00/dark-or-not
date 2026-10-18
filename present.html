@@ -9,7 +9,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .app{height:100%; display:grid; grid-template-rows:auto 1fr; padding:0 32px}
+  .app{height:100%; display:grid; grid-template-rows:auto 1fr auto; padding:0 32px}
+  .lenses{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; padding:14px 0 18px; border-top:1px solid var(--line)}
+  .lens{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 14px; min-width:0}
+  .lens b{display:block; font-size:1rem}
+  .lens span{display:block; color:var(--muted); font-size:.88rem; line-height:1.35}
+  .bylens{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:12px}
+  .bylens div{background:var(--bg); border-radius:10px; padding:10px 12px; min-width:0}
+  .bylens .nm{font-size:.8rem; font-weight:700; color:var(--muted); line-height:1.25}
+  .bylens .av{font:700 1.7rem/1.1 var(--mono); margin-top:4px}
+  .bylens .ct{font-size:.78rem; color:var(--muted)}
   header{display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--line); flex-wrap:wrap}
   header .brand{font-weight:700; font-size:1.1rem}
   header .join{margin-left:auto; color:var(--muted); font-size:.95rem}
@@ -32,7 +41,7 @@
 
   /* poll */
   .poll{display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:36px; align-items:start}
-  .poll img{width:100%; max-height:52vh; object-fit:contain; border-radius:14px; border:1px solid var(--line); background:var(--surface)}
+  .poll img{width:100%; max-height:40vh; object-fit:contain; border-radius:14px; border:1px solid var(--line); background:var(--surface)}
   .q{font-size:clamp(1.3rem,2vw,1.9rem); font-weight:700; margin:12px 0 0; line-height:1.3}
   .side{padding:24px; display:flex; flex-direction:column; gap:20px}
   .clock{font:700 5rem/1 var(--mono); font-variant-numeric:tabular-nums}
@@ -46,24 +55,22 @@
 
   /* results */
   .bars{display:flex; flex-direction:column; gap:12px}
-  .b{display:grid; grid-template-columns:minmax(0,8rem) minmax(0,1fr) 3rem; gap:12px; align-items:center}
-  .b .lab{font-weight:700; min-width:0}
+  .b{display:grid; grid-template-columns:minmax(0,15rem) minmax(0,1fr) 3rem; gap:12px; align-items:center; cursor:pointer}
+  .b .lab{font-weight:700; min-width:0; line-height:1.25}
+  .b .who{grid-column:1 / -1; font-size:.95rem; color:var(--muted); padding:2px 0 6px calc(15rem + 12px)}
+  .scale-b .b{grid-template-columns:2.5rem minmax(0,1fr) 3rem}
+  .scale-b .b .who{padding-left:calc(2.5rem + 12px)}
+  .end-label{font-weight:700; color:var(--muted); padding-left:calc(2.5rem + 12px); margin:6px 0}
+  .hint{font-size:.85rem; color:var(--muted); margin:10px 0 0}
   .b .tr{height:38px; background:var(--accent-soft); border-radius:8px; overflow:hidden}
   .b .fi{height:100%; background:var(--accent); border-radius:8px; width:0; transition:width .6s ease}
   .b .ct{font:700 1.3rem var(--mono); text-align:right}
   .scale-b .lab{font:700 1.3rem var(--mono); text-align:center}
-  .summary{display:flex; gap:18px; align-items:center; padding:14px 16px; background:var(--bg); border-radius:12px; flex-wrap:wrap}
-  .summary .avg{font:700 2.4rem/1 var(--mono)}
+  .summary{display:flex; gap:18px; align-items:center; padding:14px 16px; background:var(--bg); border-radius:12px; flex-wrap:wrap; margin-top:16px}
+  .summary .avg{font:700 1.6rem/1 var(--mono)}
   .tag{font:700 .8rem/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; padding:7px 11px; border-radius:999px; border:1.5px solid var(--ink)}
-  .ends{display:flex; justify-content:space-between; color:var(--muted); font-size:.9rem; font-weight:700}
-  .b{cursor:pointer}
-  .b .who{grid-column:1 / -1; font-size:.95rem; color:var(--muted); padding:2px 0 6px calc(8rem + 12px)}
-  .end-label{font-weight:700; color:var(--muted); padding-left:calc(8rem + 12px); margin:6px 0}
-  .summary{margin-top:16px}
-  .scale-b .b{grid-template-columns:2.5rem minmax(0,1fr) 3rem}
-  .scale-b .b .who{padding-left:calc(2.5rem + 12px)}
-  .end-label.scale-end{padding-left:calc(2.5rem + 12px)}
-  @media (max-width:900px){ .lobby,.poll{grid-template-columns:minmax(0,1fr)} .app{padding:0 16px} }
+
+  @media (max-width:900px){ .lobby,.poll{grid-template-columns:minmax(0,1fr)} .app{padding:0 16px} .lenses,.bylens{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media (prefers-reduced-motion:reduce){ .fi,.prog b{transition:none} }
 </style>
 </head>
@@ -75,6 +82,7 @@
     <div class="join">Join at <b id="joinShort"></b></div>
   </header>
   <main id="main"></main>
+  <footer class="lenses" id="lenses" aria-label="The four lenses"></footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -105,6 +113,7 @@ function start(){
     render(true);
   });
 
+  $("lenses").innerHTML = LENSES.map(l => `<div class="lens"><b>${esc(l.name)}</b><span>${esc(l.ask)}</span></div>`).join("");
   $("toLobby").addEventListener("click", () => db.ref("live").set({ state: "lobby", next: live.next ?? nextIndex() }));
 
   function nextIndex(){
@@ -203,34 +212,61 @@ function start(){
     if (mode === "results") drawResults(polls[live.poll]);
   }
 
+  // Rows whose name list is open; kept across redraws, cleared for each new poll.
+  let openRows = new Set(), openRound = null;
+
   function drawResults(p){
     const el = $("results"); if (!el) return;
-    const vals = Object.values(resp).map(r => r.v);
+    if (openRound !== live.round) { openRows = new Set(); openRound = live.round; }
+    const nameOf = id => (people[id] && people[id].name) || "Unknown";
+    const row = (i, label, count, max) => `<div class="b" data-row="${i}">
+        <span class="lab">${label}</span>
+        <div class="tr"><div class="fi" style="width:${count / max * 100}%"></div></div>
+        <span class="ct">${count}</span>
+        <div class="who" ${openRows.has(i) ? "" : "hidden"}>${esc(who[i].join(", ") || "No one")}</div>
+      </div>`;
+    // Average score among people who picked each lens.
+    const byLens = () => {
+      const sums = LENSES.map(() => ({ s: 0, n: 0 }));
+      Object.values(resp).forEach(r => { if (r.v >= 1 && r.v <= 5 && sums[r.lens]) { sums[r.lens].s += r.v; sums[r.lens].n++; } });
+      return `<div class="eyebrow" style="margin-top:18px">Average score by lens</div><div class="bylens">${LENSES.map((l,i) => `<div>
+        <div class="nm">${esc(l.name)}</div>
+        <div class="av">${sums[i].n ? (sums[i].s / sums[i].n).toFixed(1) : "–"}</div>
+        <div class="ct">${sums[i].n} ${sums[i].n === 1 ? "person" : "people"}</div></div>`).join("")}</div>`;
+    };
+    let who;
     if (p.type === "scale") {
-      const who = [[],[],[],[],[]];
-      Object.entries(resp).forEach(([id, r]) => { if (r.v >= 1 && r.v <= 5) who[r.v-1].push((people[id] && people[id].name) || "Unknown"); });
-      const c = who.map(w => w.length);      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
+      who = [[],[],[],[],[]];
+      Object.entries(resp).forEach(([id, r]) => { if (r.v >= 1 && r.v <= 5) who[r.v - 1].push(nameOf(id)); });
+      const c = who.map(w => w.length);
+      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
       let summary = `<span class="muted">No answers.</span>`;
       if (n) {
         const avg = c.reduce((a,b,i) => a + b*(i+1), 0) / n;
         const low = (c[0]+c[1]) / n, high = (c[3]+c[4]) / n;
-        const tag = (low >= .3 && high >= .3) ? "Split verdict" : avg <= 2.2 ? "Leans good nudge" : avg >= 3.8 ? "Leans dark pattern" : "Grey area";
-        summary = `<span class="avg">${avg.toFixed(1)}</span><span class="muted">average of ${n}</span><span class="tag">${tag}</span>`;
+        summary = `<span class="avg">${avg.toFixed(1)}</span><span class="muted">average of ${n}</span>`;
       }
-        el.innerHTML = `<div class="end-label scale-end">${esc(labels.left)}</div>
-        <div class="bars scale-b">${c.map((k,i) => `<div class="b"><span class="lab">${i+1}</span><div class="tr"><div class="fi" style="width:${k/max*100}%"></div></div><span class="ct">${k}</span><div class="who" hidden>${esc(who[i].join(", ") || "No one")}</div></div>`).join("")}</div>
-        <div class="end-label scale-end">${esc(labels.right)}</div>
-        <div class="summary">${summary}</div>`;
+      el.innerHTML = `<div class="end-label">${esc(labels.left)}</div>
+        <div class="bars scale-b">${c.map((k,i) => row(i, i + 1, k, max)).join("")}</div>
+        <div class="end-label">${esc(labels.right)}</div>
+        <div class="summary">${summary}</div>
+        ${byLens()}
+        <p class="hint">Click a bar to see who chose it.</p>`;
     } else {
       const opts = p.options || [];
-      const who = opts.map(() => []);
-      Object.entries(resp).forEach(([id, r]) => { if (who[r.v]) who[r.v].push((people[id] && people[id].name) || "Unknown"); });
-      const c = who.map(w => w.length);      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
-      el.innerHTML = `<div class="bars">${opts.map((o,i) => `<div class="b"><span class="lab">${esc(o)}</span><div class="tr"><div class="fi" style="width:${c[i]/max*100}%"></div></div><span class="ct">${c[i]}</span><div class="who" hidden>${esc(who[i].join(", ") || "No one")}</div></div>`).join("")}</div>
-      <p class="muted" style="margin:14px 0 0">${n} ${n === 1 ? "answer" : "answers"}</p>`;
+      who = opts.map(() => []);
+      Object.entries(resp).forEach(([id, r]) => { if (who[r.v]) who[r.v].push(nameOf(id)); });
+      const c = who.map(w => w.length);
+      const n = c.reduce((a,b) => a+b, 0), max = Math.max(1, ...c);
+      el.innerHTML = `<div class="bars">${opts.map((o,i) => row(i, esc(o), c[i], max)).join("")}</div>
+        <p class="hint">${n} ${n === 1 ? "answer" : "answers"} · Click a bar to see who chose it.</p>`;
     }
-    el.onclick = e => { const b = e.target.closest(".b"); if (b) { const w = b.querySelector(".who"); w.hidden = !w.hidden; } };
-
+    el.onclick = e => {
+      const b = e.target.closest(".b"); if (!b) return;
+      const i = +b.dataset.row, w = b.querySelector(".who");
+      w.hidden = !w.hidden;
+      if (w.hidden) openRows.delete(i); else openRows.add(i);
+    };
   }
 
   setInterval(() => {
